@@ -7,7 +7,7 @@ Console.WriteLine("Hello, World!");
 var channel = ulong.Parse(args[0]);
 var client = new DiscordClient(new DiscordConfiguration()
 {
-    Intents = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents,
+    Intents = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents | DiscordIntents.GuildMembers,
     Token = args[1],
     TokenType = TokenType.Bot,
 });
