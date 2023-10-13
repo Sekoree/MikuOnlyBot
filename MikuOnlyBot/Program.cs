@@ -111,53 +111,61 @@ Console.ReadLine();
 
 static async Task HandlePastReactions(DiscordGuild guild, DiscordEmoji emoji)
 {
-    Console.WriteLine("Handling past reactions in guild: " + guild.Name);
-    var ruleChannel = guild.GetChannel(483282509035995156);
-    Console.WriteLine("Rule channel: " + ruleChannel.Name);
-    var announcementChannel = guild.GetChannel(483290389047017482);
-    Console.WriteLine("Announcement channel: " + announcementChannel.Name);
-    var ruleMsg = await ruleChannel.GetMessageAsync(1159957838358122506);
-    var ruleMsgReacts = await ruleMsg.GetReactionsAsync(emoji, 100);
-    Console.WriteLine("Rule message reactions: " + ruleMsgReacts.Count);
-    var announcementMsg = await announcementChannel.GetMessageAsync(1159960482342506517);
-    var announcementMsgReacts = await announcementMsg.GetReactionsAsync(emoji, 100);
-    Console.WriteLine("Announcement message reactions: " + announcementMsgReacts.Count);
-
-    var reactedUsers = new List<DiscordUser>();
-    foreach (var discordUser in ruleMsgReacts)
-        if (discordUser is not null)
-            reactedUsers.Add(discordUser);
-
-    foreach (var discordUser in announcementMsgReacts)
-        if (discordUser is not null && !reactedUsers.Contains(discordUser))
-            reactedUsers.Add(discordUser);
-
-    Console.WriteLine("Total reacted users: " + reactedUsers.Count);
-
-    var role = guild.GetRole(1159956236733780049);
-    var members = await guild.GetAllMembersAsync();
-    var usersWithRole = new List<DiscordMember>();
-    foreach (var member in members)
-        if (member.Roles.Any(r => r.Id == role.Id))
-            usersWithRole.Add(member);
-
-    Console.WriteLine("Total users with role: " + usersWithRole.Count);
-
-    var usersMissingRole = reactedUsers.Where(u => !usersWithRole.Contains(u));
-    foreach (var user in usersMissingRole)
+    try
     {
-        var member = members.First(m => m.Id == user.Id);
-        await member.GrantRoleAsync(role);
-        Console.WriteLine($"Granted {member.DisplayName} the role");
-    }
+        Console.WriteLine("Handling past reactions in guild: " + guild.Name);
+        var ruleChannel = guild.GetChannel(483282509035995156);
+        Console.WriteLine("Rule channel: " + ruleChannel.Name);
+        var announcementChannel = guild.GetChannel(483290389047017482);
+        Console.WriteLine("Announcement channel: " + announcementChannel.Name);
+        var ruleMsg = await ruleChannel.GetMessageAsync(1159957838358122506);
+        var ruleMsgReacts = await ruleMsg.GetReactionsAsync(emoji, 100);
+        Console.WriteLine("Rule message reactions: " + ruleMsgReacts.Count);
+        var announcementMsg = await announcementChannel.GetMessageAsync(1159960482342506517);
+        var announcementMsgReacts = await announcementMsg.GetReactionsAsync(emoji, 100);
+        Console.WriteLine("Announcement message reactions: " + announcementMsgReacts.Count);
 
-    var usersWithRoleMissingReaction = usersWithRole.Where(u => !reactedUsers.Contains(u));
-    foreach (var user in usersWithRoleMissingReaction)
+        var reactedUsers = new List<DiscordUser>();
+        foreach (var discordUser in ruleMsgReacts)
+            if (discordUser is not null)
+                reactedUsers.Add(discordUser);
+
+        foreach (var discordUser in announcementMsgReacts)
+            if (discordUser is not null && !reactedUsers.Contains(discordUser))
+                reactedUsers.Add(discordUser);
+
+        Console.WriteLine("Total reacted users: " + reactedUsers.Count);
+
+        var role = guild.GetRole(1159956236733780049);
+        var members = await guild.GetAllMembersAsync();
+        var usersWithRole = new List<DiscordMember>();
+        foreach (var member in members)
+            if (member.Roles.Any(r => r.Id == role.Id))
+                usersWithRole.Add(member);
+
+        Console.WriteLine("Total users with role: " + usersWithRole.Count);
+
+        var usersMissingRole = reactedUsers.Where(u => !usersWithRole.Contains(u));
+        foreach (var user in usersMissingRole)
+        {
+            var member = members.First(m => m.Id == user.Id);
+            await member.GrantRoleAsync(role);
+            Console.WriteLine($"Granted {member.DisplayName} the role");
+        }
+
+        var usersWithRoleMissingReaction = usersWithRole.Where(u => !reactedUsers.Contains(u));
+        foreach (var user in usersWithRoleMissingReaction)
+        {
+            var member = members.First(m => m.Id == user.Id);
+            await member.RevokeRoleAsync(role);
+            Console.WriteLine($"Revoked {member.DisplayName} the role");
+        }
+
+        Console.WriteLine("Done");
+    }
+    catch (Exception e)
     {
-        var member = members.First(m => m.Id == user.Id);
-        await member.RevokeRoleAsync(role);
-        Console.WriteLine($"Revoked {member.DisplayName} the role");
+        Console.WriteLine("Error: ");
+        Console.WriteLine(e);
     }
-
-    Console.WriteLine("Done");
 }
